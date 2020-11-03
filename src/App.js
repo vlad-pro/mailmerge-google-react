@@ -8,7 +8,7 @@ const client_secret = process.env.REACT_APP_CLIENT_SECRET;
 
 // authorization constants
 const scope = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents";
-const redirect_uri = "http://localhost:3000";
+const redirect_uri = "https://awesome-goldstine-486944.netlify.app";
 const response_type = "code";
 
 // application constants
@@ -129,7 +129,8 @@ const getAccessToken = async (x) => {
           '&client_id=' + client_id +
           '&client_secret=' + client_secret +
           '&redirect_uri=' + redirect_uri +
-          "&grant_type=" + "authorization_code";
+          "&grant_type=" + 
+          "authorization_code";
 
       return await axios.post(postDataUrl)
       .then((response) =>  response.data.access_token)
@@ -204,7 +205,7 @@ class App extends React.Component {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code")
     if (code) {
-      console.log("Gotcha");
+      console.log("Code Acquired");
       console.log(code);
       const access_token = await getAccessToken(code)
       console.log("access token: " + access_token)    
