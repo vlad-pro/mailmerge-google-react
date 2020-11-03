@@ -129,7 +129,8 @@ const getAccessToken = async (x) => {
           '&client_id=' + client_id +
           '&client_secret=' + client_secret +
           '&redirect_uri=' + redirect_uri +
-          "&grant_type=" + "authorization_code";
+          "&grant_type=" + 
+          "authorization_code";
 
       return await axios.post(postDataUrl)
       .then((response) =>  response.data.access_token)
@@ -214,6 +215,11 @@ class App extends React.Component {
         if (copy_id){
           const status = await batchUpdate(copy_id, access_token)
           console.log("Merged document status: " + status)
+          if (status === 200) {
+            window.open(
+              "https://docs.google.com/document/d/" + copy_id + "/edit",
+               "_blank")
+          }
         } else {
             console.log("copy does not work")
         }
@@ -272,7 +278,7 @@ class App extends React.Component {
           <input type="submit" value="Submit" />
         </form>
 
-        <button onClick={this.mailMerge}>Copy file</button>
+        <button onClick={this.mailMerge}>Create Document From Template</button>
         <button onClick={this.urlDisplay}>display url</button>
       </div>
     );
