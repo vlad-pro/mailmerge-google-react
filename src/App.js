@@ -215,6 +215,11 @@ class App extends React.Component {
         if (copy_id){
           const status = await batchUpdate(copy_id, access_token)
           console.log("Merged document status: " + status)
+          if (status === 200) {
+            window.open(
+              "https://docs.google.com/document/d/" + copy_id + "/edit",
+               "_blank")
+          }
         } else {
             console.log("copy does not work")
         }
@@ -273,8 +278,8 @@ class App extends React.Component {
           <input type="submit" value="Submit" />
         </form>
 
-        <button onClick={this.mailMerge}>Copy file</button>
-        <button onClick={this.urlDisplay}>display url</button>
+        <button onClick={this.mailMerge}>Create new document from the template</button>
+        {/* <button onClick={this.urlDisplay}>Display Url</button> */}
       </div>
     );
   }
