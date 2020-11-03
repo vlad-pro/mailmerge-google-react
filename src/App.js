@@ -176,12 +176,7 @@ class App extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({
-      to_name: event.target.to_name,
-      to_title: event.target.to_title,
-      to_company: event.target.to_company,
-      to_address: event.target.to_address,
-    });
+    this.setState({[event.target.name]: event.target.value});
   }
 
   handleSubmit(event) {
@@ -200,8 +195,6 @@ class App extends React.Component {
   }
 
   async componentDidMount() {
-    // const code =
-    // console.log("Hello")
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code")
     if (code) {
@@ -239,7 +232,7 @@ class App extends React.Component {
             Name:
             <input
               type="text"
-              value={this.state.to_name}
+              name="to_name"
               onChange={this.handleChange}
               // placeholder="Name of the recipient"
             />
@@ -249,7 +242,7 @@ class App extends React.Component {
             Title:
             <input
               type="text"
-              value={this.state.to_title}
+              name="to_title"
               onChange={this.handleChange}
               // placeholder="Title of the recipient"
             />
@@ -259,7 +252,7 @@ class App extends React.Component {
             Title:
             <input
               type="text"
-              value={this.state.to_company}
+              name="to_company"
               onChange={this.handleChange}
               // placeholder="Company of the recipient"
             />
@@ -269,7 +262,7 @@ class App extends React.Component {
             Address:
             <input
               type="text"
-              value={this.state.to_address}
+              name="to_address"
               onChange={this.handleChange}
               // placeholder="Address of the recipient"
             />
