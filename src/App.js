@@ -161,7 +161,7 @@ const batchUpdate = async (doc_id, token) => {
   .then(response =>  response.status);
 }
 
-class App extends React.Component {
+export class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -281,4 +281,6 @@ class App extends React.Component {
   }
 }
 
-export default App;
+function App2() {}
+
+
