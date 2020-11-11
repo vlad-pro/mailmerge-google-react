@@ -18,10 +18,10 @@ export const generateAuthCodeUrl = function () {
     "https://accounts.google.com/o/oauth2/v2/auth?" +
     "client_id=" + client_id +
     "&scope=" + scope +
+    // "&access_type" + 
+    // "offline"+
     "&redirect_uri=" + redirect_uri +
-    "&response_type=" + response_type + 
-    "&access_type" + 
-    "offline";
+    "&response_type=" + response_type;
 
   // use this url to redirect user to consent page
   return authURL;
