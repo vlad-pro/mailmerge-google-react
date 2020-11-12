@@ -1,24 +1,65 @@
-import React, {useState, useEffect} from "react";
+import React, {useEffect} from "react";
 import "./App.css";
-import { 
-  generateAuthCodeUrl, 
-  getAccessToken, 
-  copyGoogleDoc, 
-  batchUpdate
-} from "./services";
+// import { 
+//   generateAuthCodeUrl, 
+//   getAccessToken, 
+//   copyGoogleDoc, 
+//   batchUpdate
+// } from "./services";
+import  useForm from "./useForm";
+import axios from "axios";
 
 
 export function App2() {
-  const [to_name, setTo_name] = useState("");
-  const [to_title, setTo_title] = useState("");
-  const [to_company, setTo_company] = useState("");
-  const [to_address, setTo_address] = useState("");
+
+  const { values, handleChange, handleSubmit } = useForm(login);
+  
+  function login() {
+    alert("The following title was submitted: " + values.to_title);
+  };
+
+  function mailMerge() {
+    const authURL = generateAuthCodeUrl();
+    console.log(authURL);
+    window.location.assign(authURL);
+  }
+
+  function urlDisplay() {
+    alert(window.location.search);
+    console.log(window.location.search);
+  }
 
   useEffect(()=> {
-    function handleSubmit(event) {
-      alert("The following was submitted: " + this.state.to_title);
-      event.preventDefault();
+    // const code =
+    // console.log("Hello")
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code")
+    if (code) {
+      console.log("Gotcha");
+      console.log(code);
+      const access_token =  getAccessToken(code)
+      console.log("access token: " + access_token)    
+      if (access_token) {
+        const copy_id =  copyGoogleDoc(access_token)
+        console.log("copy id: " + copy_id)
+        if (copy_id){
+          const status =  batchUpdate(copy_id, access_token)
+          console.log("Merged document status: " + status)
+          if (status === 200) {
+            window.open(
+              "https://docs.google.com/document/d/" + copy_id + "/edit",
+               "_blank")
+          }
+        } else {
+            console.log("copy does not work")
+        }
+      } else {
+          console.log("no access_token")
+      }    
+    } else {
+        console.log("code not in query string");
     }
+
   })
 
   return (
@@ -29,7 +70,8 @@ export function App2() {
             <input
               type="text"
               name="to_name"
-              onChange={setTo_name}
+              onChange={handleChange}
+              value={values.to_name}
               // placeholder="Name of the recipient"
             />
           </label>
@@ -39,17 +81,19 @@ export function App2() {
             <input
               type="text"
               name="to_title"
-              onChange={setTo_title}
+              onChange={handleChange}
+              value={values.to_title}
               // placeholder="Title of the recipient"
             />
           </label>
 
           <label>
-            Title:
+            Company:
             <input
               type="text"
               name="to_company"
-              onChange={setTo_company}
+              onChange={handleChange}
+              value={values.to_company}
               // placeholder="Company of the recipient"
             />
           </label>
@@ -59,7 +103,8 @@ export function App2() {
             <input
               type="text"
               name="to_address"
-              onChange={setTo_address}
+              onChange={handleChange}
+              value={values.to_address}
               // placeholder="Address of the recipient"
             />
           </label>
@@ -67,8 +112,8 @@ export function App2() {
           <input type="submit" value="Submit" />
         </form>
 
-        <button onClick={this.mailMerge}>Create Document From Template</button>
-        <button onClick={this.urlDisplay}>display url</button>
+        <button onClick={mailMerge}>Create Document From Template</button>
+        <button onClick={urlDisplay}>display url</button>
       </div>
     );
 }
@@ -165,7 +210,7 @@ export class App extends React.Component {
           </label>
 
           <label>
-            Title:
+            Company:
             <input
               type="text"
               name="to_company"
@@ -192,4 +237,167 @@ export class App extends React.Component {
       </div>
     );
   }
+}
+
+// authorization secrets
+const client_id =process.env.REACT_APP_CLIENT_ID;
+const client_secret = process.env.REACT_APP_CLIENT_SECRET;
+
+// authorization constants
+const scope = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents";
+const redirect_uri = "http://localhost:3000";
+const response_type = "code";
+
+// application constants
+const DOCS_FILE_ID = "10Ob_wgq4QEp8eNZwb_ei2sSTPrQgEHcnCsa4S4e4ndE";
+
+
+const generateAuthCodeUrl = function () {
+  var authURL =
+    "https://accounts.google.com/o/oauth2/v2/auth?" +
+    "client_id=" + client_id +
+    "&scope=" + scope +
+    // "&access_type" + 
+    // "offline"+
+    "&redirect_uri=" + redirect_uri +
+    "&response_type=" + response_type;
+
+  // use this url to redirect user to consent page
+  return authURL;
+};
+
+// Get AuthToken from google
+const getAccessToken = async (x) => {
+      var postDataUrl = 'https://www.googleapis.com/oauth2/v4/token?' +
+          'code=' + x +  //auth code received from the previous call
+          '&client_id=' + client_id +
+          '&client_secret=' + client_secret +
+          '&redirect_uri=' + redirect_uri +
+          "&grant_type=" + 
+          "authorization_code";
+
+      return await axios.post(postDataUrl)
+      .then((response) =>  response.data.access_token)
+
+  };
+
+const copyGoogleDoc = async (token) => {
+  var copyDocUrl = "https://www.googleapis.com/drive/v3/files/" + DOCS_FILE_ID + "/copy";
+
+  return await axios.post(copyDocUrl,null,{
+    headers:{
+      "Content-type": "application/json",
+      "Authorization": "Bearer " + token
+    }
+  })
+  .then(response =>  response.data.id);
+}
+
+const batchUpdate = async (doc_id, token) => {
+  var batchDocUrl = "https://docs.googleapis.com/v1/documents/" + doc_id + ":batchUpdate"
+  
+  return await axios.post(batchDocUrl, body,{
+    headers:{
+      "Content-type": "application/json",
+      "Authorization": "Bearer " + token
+    }
+  })
+  .then(response =>  response.status);
+}
+
+
+// data/body for mailMerge call
+const body = {
+  "requests": [
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{MY_NAME}}',
+          matchCase: true,
+        },
+        replaceText: "Ms. Lara Brown",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{MY_ADDRESS}}',
+          matchCase: true,
+        },
+        replaceText: "360 South Maple Drive,\nBeverly Hills,\nCalifornia 90212",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{MY_PHONE}}',
+          matchCase: true,
+        },
+        replaceText: "+1(234) 567-8910",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{MY_EMAIL}}',
+          matchCase: true,
+        },
+        replaceText: "lara@borrowlabs.com",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{DATE}}',
+          matchCase: true,
+        },
+        replaceText: "2020-11-11",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{TO_NAME}}',
+          matchCase: true,
+        },
+        replaceText: "Ms. John Dow",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{TO_TITLE}}',
+          matchCase: true,
+        },
+        replaceText: "Appraiser",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{TO_COMPANY}}',
+          matchCase: true,
+        },
+        replaceText: "Best South Appraisal",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{TO_ADDRESS}}',
+          matchCase: true,
+        },
+        replaceText: "939 Plam Drive,\nIrvine,\nCalifornia 80404",
+      },
+    },
+    {
+      replaceAllText: {
+        containsText: {
+          text: '{{BODY}}',
+          matchCase: true,
+        },
+        replaceText: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      },
+    },
+  ]
 }
